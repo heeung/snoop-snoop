@@ -47,3 +47,38 @@ df = spark.createDataFrame(data = data, schema = columns)
 |006|   James|     M| 30| FE|  3500|
 +---+--------+------+---+---+------+
 ```
+
+# TIL_0905
+
+## ElasticSearch란?
+
+Elasticsearch는 오픈 소스 검색 및 분석 엔진으로, 다양한 종류의 데이터를 저장, 검색, 분석할 수 있는 빠르고 확장 가능한 도구입니다. 
+
+Elasticsearch는 주로 텍스트 검색 및 분석에 사용되지만, 다양한 형태의 데이터를 처리하는 데에도 매우 유용합니다.
+
+## Elastic Search Docker 빌드
+
+Elastic Search 설치
+
+```docker pull docker.elastic.co/elasticsearch/elasticsearch:7.9.1```
+
+Elastic Search 실행
+
+```
+docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" --name elasticsearch7 docker.elastic.co/elasticsearch/elasticsearch:7.9.1
+b5028c898638f74a5aef326899617503b1ef74ee53597cd6c23f50182e4435c6
+```
+
+## Elastic Search 사용
+
+Elastic Search 클러스터 연결
+
+```es = Elasticsearch([{'host': 'localhost', 'port': 9200, 'scheme': 'http'}])```
+
+Elastic Search에 데이터 인덱싱
+
+```es.index(index='coupang_data', body=json.dumps(row.to_dict()), headers={"accept": "application/json", "content-type": "application/json"})```
+
+Elastic Search 클러스터 종료
+
+```es.close()```
