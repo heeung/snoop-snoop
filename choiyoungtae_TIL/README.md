@@ -213,3 +213,33 @@ url = "https://www.coupang.com/np/search?component=&q=%EC%95%84%EC%9D%B4%ED%8C%A
 
 ![img_1.png](image/img_1.png)
 > 크롤링 데이터가 메시지로 kafka에 전송된 것을 확인
+
+
+# TIL-23.09.05
+
+## ELK 스택
+
+### 1. ElasticSearch
+> - 데이터 관리 (저장/검색/분석)
+> - 검색 엔진: 실시간 분산 검색 엔진으로, 대규모 데이터를 빠르게 저장하고 검색할 수 있다
+> - JSON 기반: 데이터를 JSON 형식으로 색인화
+> - 분산처리: 여러 노드와 클러스터로 쉽게 확장
+> - RESTful API: 다양한 프로그래밍 언어로 쉽게 접근할 수 있는 RESTful API를 제공
+
+### 2. Logstash
+> - 데이터 처리 파이프라인
+> - 데이터 수집과 변환: 다양한 소스에서 로그 또는 이벤트 데이터를 수집하여 필요에 따라 변환
+> - 플러그인 아키텍처: 입력, 필터, 출력 플러그인을 통해 다양한 데이터 소스와 목적지에 연결
+> - Elasticsearch와 통합: 일반적으로 Logstash는 Elasticsearch로 데이터를 전송하여 색인을 생성하거나 업데이트
+
+### 3. Kibana
+> - 시각화 기능
+> - 데이터 시각화: Elasticsearch에서 저장된 데이터를 기반으로 다양한 차트나 대시보드를 만들 수 있다
+> - 데이터 탐색: 저장된 데이터를 쉽게 검색하고 탐색
+> - Dev Tools: Elasticsearch의 RESTful API를 직접 사용하여 데이터를 질의할 수 있는 기능을 제공
+
+### 4. Beats
+> - 경량 로그 수집기: Logstash가 복잡한 데이터 변환 작업을 수행하는 데 반해, Beats는 보다 경량화되어 있고, 특정 유형의 데이터를 빠르게 수집하는 데 초점을 맞춘다
+> - 다양한 베리언트: Filebeat(로그 파일), Metricbeat(메트릭), Packetbeat(네트워크 데이터), Auditbeat(보안 감사 등)과 같이 특정 데이터 유형에 특화된 여러 베리언트가 있다
+> - Elasticsearch 및 Logstash 지원: Beats는 직접 Elasticsearch로 데이터를 전송할 수 있으며, 더 복잡한 처리를 위해 Logstash로도 데이터를 보낼 수 있다
+> - 간단한 배포와 확장: 각 서버에 작은 에이전트를 설치하기만 하면 되므로, 배포와 확장이 매우 쉽다
