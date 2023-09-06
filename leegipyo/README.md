@@ -50,12 +50,6 @@ df = spark.createDataFrame(data = data, schema = columns)
 
 # TIL_0905
 
-## ElasticSearch란?
-
-Elasticsearch는 오픈 소스 검색 및 분석 엔진으로, 다양한 종류의 데이터를 저장, 검색, 분석할 수 있는 빠르고 확장 가능한 도구입니다. 
-
-Elasticsearch는 주로 텍스트 검색 및 분석에 사용되지만, 다양한 형태의 데이터를 처리하는 데에도 매우 유용합니다.
-
 ## Elastic Search Docker 빌드
 
 Elastic Search 설치
@@ -82,3 +76,28 @@ Elastic Search에 데이터 인덱싱
 Elastic Search 클러스터 종료
 
 ```es.close()```
+
+# TIL_0906
+
+## ELK란 무엇일까?
+ELK는 3가지 오픈 소스 소프트웨어인 분석 및 저장 기능을 담당하는 ElasticSearch, 수집 기능을 하는 Logstash, 시각화 도구인 Kibana의 각각의 앞글자를 따서 만든 단어로 각 제품이 연동되어 데이터 수집 및 분석 툴로 활용됩니다.
+
+## Logstash
+Logstash는 크게 입력 -> 필터 -> 출력과 같이 3가지 단계로 이루어집니다.
+
+입력에서는 다양한 데이터 저장소로부터 데이터를 입력받는 작업을 진행합니다.
+
+필터에서는 데이터를 확장, 변경, 필터링 및 삭제 처리하는 가공 작업을 진행합니다.
+
+출력에서는 다양한 데이터 저장소로 데이터를 전송하는 작업을 진행합니다.
+
+## ElasticSearch
+ElasticSearch는 Lucene 기반으로 개발된 분산 검색 엔진입니다.
+
+ELK 구조에서의 역할은 Logstash를 통해 수신된 데이터를 ElasticSearch에 저장하는 데이터 저장소 역할을 수행합니다.
+
+NoSQL 기반 데이터베이스이며 RDB와 다르게 트랜잭션 Rollback을 지원하지 않으나 검색 및 분석 성능이 뛰어납니다.
+
+## Kibana
+
+Kibana는 사용자에게 분석 결과를 시각화 해주는 소프트웨어로 ElasticSearch에 저장된 데이터들을 시각화하여 차트, 그래프화 또는 로그 데이터를 한번에 모아서 볼 수 있습니다.
