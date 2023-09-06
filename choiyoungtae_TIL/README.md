@@ -243,3 +243,16 @@ url = "https://www.coupang.com/np/search?component=&q=%EC%95%84%EC%9D%B4%ED%8C%A
 > - 다양한 베리언트: Filebeat(로그 파일), Metricbeat(메트릭), Packetbeat(네트워크 데이터), Auditbeat(보안 감사 등)과 같이 특정 데이터 유형에 특화된 여러 베리언트가 있다
 > - Elasticsearch 및 Logstash 지원: Beats는 직접 Elasticsearch로 데이터를 전송할 수 있으며, 더 복잡한 처리를 위해 Logstash로도 데이터를 보낼 수 있다
 > - 간단한 배포와 확장: 각 서버에 작은 에이전트를 설치하기만 하면 되므로, 배포와 확장이 매우 쉽다
+
+
+# TIL-23.09.06
+
+### 데이터 분산 프로세스 구축
+
+> 1. 쿠팡, 11번가에서 크롤링 및 API를 통해 상품 데이터 수집
+> 2. 수집된 데이터는 kafka producer 역할을 하며 카테고리를 토픽으로 생성
+> 3. kafka 클러스터는 docker-compose를 통해 3개의 브로커로 구축
+> 4. kafka connect로 실시간 업데이트되는 컨텐츠를 감시하고 logstash로 전송
+> 5. logstash에서 데이터 포맷 통일 후 Elasticsearch로 전송
+> 6. ElasticSearch에서 데이터 저장 및 관리
+
