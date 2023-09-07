@@ -214,6 +214,7 @@ url = "https://www.coupang.com/np/search?component=&q=%EC%95%84%EC%9D%B4%ED%8C%A
 ![img_1.png](image/img_1.png)
 > 크롤링 데이터가 메시지로 kafka에 전송된 것을 확인
 
+<br>
 
 # TIL-23.09.05
 
@@ -244,10 +245,11 @@ url = "https://www.coupang.com/np/search?component=&q=%EC%95%84%EC%9D%B4%ED%8C%A
 > - Elasticsearch 및 Logstash 지원: Beats는 직접 Elasticsearch로 데이터를 전송할 수 있으며, 더 복잡한 처리를 위해 Logstash로도 데이터를 보낼 수 있다
 > - 간단한 배포와 확장: 각 서버에 작은 에이전트를 설치하기만 하면 되므로, 배포와 확장이 매우 쉽다
 
+<br>
 
 # TIL-23.09.06
 
-### 데이터 분산 프로세스 구축
+### 데이터 분산 프로세스 설계
 
 > 1. 쿠팡, 11번가에서 크롤링 및 API를 통해 상품 데이터 수집
 > 2. 수집된 데이터는 kafka producer 역할을 하며 카테고리를 토픽으로 생성
@@ -256,3 +258,80 @@ url = "https://www.coupang.com/np/search?component=&q=%EC%95%84%EC%9D%B4%ED%8C%A
 > 5. logstash에서 데이터 포맷 통일 후 Elasticsearch로 전송
 > 6. ElasticSearch에서 데이터 저장 및 관리
 
+<br>
+
+# TIL-23.09.07
+
+### ELK 스택 구축과 kafka connect 설정
+
+#### 1. ELK 스택
+
+> 도커 컴포즈를 통해서 3개의 elasticsearch 노드와 kibana, logstash를 띄우려고 했지만 프리티어 인스턴스의 스펙이 너무 낮아 싱글노드의 elasticsearch와 각각의 도커 명령어를 통해서 실행시켰다<br>
+실행 전 인스턴스의 보안그룹에서 포트 열어주는 것 잊지말자
+
+```bash
+# elasticsearch 실행
+$ docker run --name elasticsearch -d -e "discovery.type=single-node" -e "ES_JAVA_OPTS=-Xms256m -Xmx256m" -p 9200:9200 docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+# kibana 실행
+$ docker pull docker.elastic.co/kibana/kibana:7.14.0
+$ docker run -d --link elasticsearch:elasticsearch -p 5601:5601 --name kibana docker.elastic.co/kibana/kibana:7.14.0
+# logstash 실행
+$ docker pull docker.elastic.co/logstash/logstash:7.14.0
+$ docker run -d --link elasticsearch:elasticsearch -p 5044:5044 --name logstash docker.elastic.co/logstash/logstash:7.14.0
+```
+
+#### 2. kafka connect
+Kafka와 외부 데이터 소스나 저장소 간에 데이터를 효율적으로 이동시키기 위한 프레임워크<br> 이를 통해 kafka 토픽에 저장되는 데이터를 실시간으로 감지해서 추출할 수 있다.
+
+>- 플러그 가능한 아키텍처: Kafka Connect는 다양한 소스와 싱크를 위한 플러그인(커넥터)을 지원한다. 커넥터는 오픈소스로 제공되거나 커뮤니티나 개발자에 의해 만들어질 수 있다.
+>- 분산 및 확장성: Kafka Connect는 분산 환경에서 실행될 수 있다. 이는 데이터 처리량이 늘어나거나 시스템이 복잡해져도 쉽게 확장 가능하다는 것을 의미
+>- 오프셋 관리: 내부적으로 Kafka에서 오프셋을 관리하기 때문에, 장애가 발생했을 때도 데이터 무결성을 유지할 수 있다.
+>- 설정 기반의 실행: 코드를 작성할 필요 없이 간단한 JSON 또는 YAML 파일로 Kafka Connect를 설정할 수 있다.
+>- 스트림과 배치 모드 지원: Kafka Connect는 실시간 스트림 처리뿐만 아니라, 배치 작업도 지원<br>
+  결과적으로, Kafka Connect를 이용하면 코드를 작성하지 않고 설정만으로 다양한 외부 시스템과 Kafka 간의 데이터 이동을 처리할 수 있어 운영적인 편의성이 높다.
+
+**Kafka connect vs Kafka connector**
+> - **connect**는 외부 시스템과 kafka의 데이터 이동 작업을 처리하는 **프레임워크**
+>- **connector**는 connect 프레임워크 안에서 실행되는 **플러그인**으로 로직을 담당, 커넥터는 소스 커넥터와 싱크 커넥터로 구분된다.
+  <br>
+>- 소스 커넥터(Source Connector): 외부 시스템(예: RDBMS, 로그 파일, 외부 API 등)에서 데이터를 가져와 Kafka 토픽으로 전달
+>- 싱크 커넥터(Sink Connector): Kafka 토픽에서 데이터를 가져와 외부 시스템(예: RDBMS, ElasticSearch, HDFS 등)으로 전달
+
+**Kafka Connect 설치 및 실행**
+> - ec2 인스턴스 환경에서 도커 컴포즈를 통해 kafka 클러스터를 만들어 놓은 뒤의 작업과정임을 유의
+>- kafka 패키지의 일부이므로 따로 설치할 필요없이 설정 파일 수정을 통해 실행 가능
+
+```
+kafka-connect:
+    image: confluentinc/cp-kafka-connect:latest
+    ports:
+      - '8083:8083'
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+      - zookeeper-1
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka-1:29092,kafka-2:29093,kafka-3:29094
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: "kafka-connect-group"
+      CONNECT_CONFIG_STORAGE_TOPIC: "kafka-connect-configs"
+      CONNECT_OFFSET_STORAGE_TOPIC: "kafka-connect-offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "kafka-connect-status"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+```
+docker-compose 파일에 위의 kafka connect 내용 추가 후 실행
+
+**elasticsearch와 연결**
+
+- Kafka Connect Elasticsearch 플러그인 설치
+```bash
+# confluent-hub를 통해 설치
+$ sudo ./confluent-hub install confluentinc/kafka-connect-elasticsearch:latest --component-dir /home/ec2-user --worker-configs /home/ec2-user/kafka-3.2.0-src/config/connect-distributed.properties
+```
+- --component-dir : 플러그인을 설치할 설치경로
+- --worker-configs : connect-distributed.properties 파일이 있는 경로
