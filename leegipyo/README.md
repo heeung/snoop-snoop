@@ -101,3 +101,168 @@ NoSQL 기반 데이터베이스이며 RDB와 다르게 트랜잭션 Rollback을 
 ## Kibana
 
 Kibana는 사용자에게 분석 결과를 시각화 해주는 소프트웨어로 ElasticSearch에 저장된 데이터들을 시각화하여 차트, 그래프화 또는 로그 데이터를 한번에 모아서 볼 수 있습니다.
+
+# TIL_0907
+
+## Docker Compose란?
+이번 프로젝트에서는 springboot, mysql, kafka, zookeeper, elasticsearch 등등과 같이 다양한 포트들을 사용하기 때문에 Docker compose를 활용해 원활한 운영을 하고자 합니다.
+
+Docker Compose는 멀티 컨테이너 Docker 애플리케이션을 정의하고 실행하기 위한 도구입니다. 하나 이상의 도커 컨테이너로 구성된 애플리케이션을 정의하고 실행하기 위한 YAML 파일을 사용하여 다수의 서비스 및 환경 설정을 관리할 수 있습니다.
+
+## Docker Compose 특징 
+복잡한 애플리케이션 관리: Docker Compose를 사용하면 복잡한 애플리케이션을 쉽게 관리할 수 있습니다. 여러 개의 컨테이너로 구성된 애플리케이션의 실행, 중지, 로깅, 네트워크 연결 및 스케일링을 간단한 명령으로 수행할 수 있습니다.
+
+여러 컨테이너 간의 의존성 관리: 애플리케이션 내의 서비스 및 컨테이너 간에 의존성이 있을 때, Docker Compose는 이러한 의존성을 관리하고 정의할 수 있습니다. 이것은 서비스가 다른 서비스를 필요로 할 때 컨테이너의 실행 순서와 종속성을 제어할 수 있음을 의미합니다.
+
+동일한 환경 재현: Docker Compose를 사용하면 개발, 테스트, 스테이징, 프로덕션 환경 등 여러 환경에서 동일한 애플리케이션을 실행하고 재현하는 데 도움이 됩니다. 이로써 버그 및 호환성 문제를 미리 발견할 수 있습니다.
+
+개발 환경 구축: 개발자는 Docker Compose를 사용하여 개발 환경을 쉽게 구축할 수 있습니다. 프로젝트에 필요한 모든 서비스와 종속성을 정의하고 단일 명령으로 환경을 실행할 수 있으므로 개발 생산성을 향상시킬 수 있습니다.
+
+스케일링: Docker Compose를 사용하면 서비스를 복제하여 스케일링할 수 있습니다. 예를 들어, 웹 서버 서비스를 여러 개의 인스턴스로 확장하려면 몇 줄의 코드만 추가하면 됩니다.
+
+## Docker Compose 파일 작성
+```java
+version: '3.3'
+services:
+  zookeeper:
+    container_name: zookeeper-cntr
+    image: confluentinc/cp-zookeeper:7.2.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka_elk_nw
+
+  kafka:
+    container_name: kafka-cntr
+    image: confluentinc/cp-kafka:7.2.0
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-cntr:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-cntr:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+    networks:
+      - kafka_elk_nw
+    healthcheck:
+      test: nc -vz kafka-cntr 9092 || exit -1
+      # start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+  
+  elasticsearch:
+    container_name: elasticsearch-cntr
+    image: elasticsearch:7.9.1
+    environment:
+      - cluster.name=kafka-cluster
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data:rw
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+      - 9300:9300
+    depends_on:
+      - kafka
+    stdin_open: true
+    tty: true
+    restart: always
+    networks:
+      - kafka_elk_nw
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+    healthcheck:
+      test: curl -u elastic:elastic -s -f elasticsearch-cntr:9200/_cat/health >/dev/null || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 5
+  logstash:
+    container_name: logstash-cntr
+    image: logstash:7.9.1
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./logstash-kafka.conf:/usr/share/logstash/pipeline/logstash-kafka.conf
+    ports:
+      - 5044:5044
+    depends_on:
+      - elasticsearch
+    stdin_open: true
+    tty: true
+    restart: always
+    networks:
+      - kafka_elk_nw
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://logstash-cntr:9600"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+  kibana:
+    container_name: kibana-cntr
+    image: kibana:7.9.1
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    stdin_open: true
+    tty: true
+    restart: always
+    networks:
+      - kafka_elk_nw
+    links: ['elasticsearch']
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+    healthcheck:
+      test: curl --fail http://kibana-cntr:5601 || exit 1
+      interval: 30s
+      retries: 3
+      timeout: 10s
+
+networks:
+  kafka_elk_nw:
+    driver: bridge
+
+volumes:
+  elasticsearch_data:
+    driver: local
+```
+
+### Docker Compose 관리
+
+실행
+
+```docker-compose up```
+
+실행 종료
+
+```docker-compose down```
