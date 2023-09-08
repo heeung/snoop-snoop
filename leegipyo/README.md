@@ -266,3 +266,24 @@ volumes:
 실행 종료
 
 ```docker-compose down```
+
+# TIL_0908
+
+## Springboot, Docker를 활용한 배포
+
+Docker를 사용해서 Springboot를 배포하기 위해서는 Springboot 패키지에 Dockerfile을 작성해야합니다.
+
+이는 배포 프로세스를 단순화하기 위함입니다.
+
+Dockerfile에 작성된 자바 정보와 jar 파일 정보를 통해 docker 이미지를 생성합니다. 
+
+```
+FROM openjdk:11
+ARG JAR_FILE=build/libs/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+```
+
+Dockerfile 작성 후 해당 디렉토리 레벨에서 docker build를 진행합니다. 그러면 이미지가 생성되며 해당 이미지를 통해 docker container를 활성화 시킵니다.
+
+로컬에서 build한 이미지는 docker hub애 push하고 EC2 환경에서 다시 hub의 이미지를 pull 하여 EC2 환경에서 docker container가 활성화되도록 합니다.
