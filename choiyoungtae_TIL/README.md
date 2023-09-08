@@ -335,3 +335,17 @@ $ sudo ./confluent-hub install confluentinc/kafka-connect-elasticsearch:latest -
 ```
 - --component-dir : 플러그인을 설치할 설치경로
 - --worker-configs : connect-distributed.properties 파일이 있는 경로
+
+<br>
+
+# TIL-23.09.08
+
+### 요구사항 명세서
+![img.png](img.png)
+
+### API 명세서
+![img_1.png](img_1.png)
+![img_3.png](img_3.png)
+
+### 간트 차트
+![img_4.png](img_4.png)
