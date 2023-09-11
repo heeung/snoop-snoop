@@ -12,7 +12,7 @@ PySpark는 Apache Spark를 Python 프로그래밍 언어로 사용하기 위한 
 
 ## Pyspark 예제
 
-```
+```python
 from pyspark.sql import SparkSession
 
 # 스파크 세션 생성
@@ -287,3 +287,30 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 Dockerfile 작성 후 해당 디렉토리 레벨에서 docker build를 진행합니다. 그러면 이미지가 생성되며 해당 이미지를 통해 docker container를 활성화 시킵니다.
 
 로컬에서 build한 이미지는 docker hub애 push하고 EC2 환경에서 다시 hub의 이미지를 pull 하여 EC2 환경에서 docker container가 활성화되도록 합니다.
+
+# TIL_0911
+
+## 개요
+이번 프로젝트에서 파이썬을 활용한 크롤러를 사용하기 때문에 크롤러를 위한 서버가 필요하다 생각했습니다. Django, flask, FastAPI 다양한 파이썬 서버가 있었지만, 간단하고 빠른 Fast api를 사용해 서버를 구축하고자 합니다.
+
+## FastAPI란?
+
+FastAPI는 파이썬을 기반으로 하는 모던하고 빠른 웹 애플리케이션 프레임워크입니다. FastAPI는 간단한 문법, 빠른 성능, 자동 문서화, 데이터 유효성 검사 및 비동기 지원과 같은 많은 기능을 제공하여 웹 개발을 쉽게 만들어줍니다.
+
+FastAPI는 성능 최적화에 중점을 둔 웹 프레임워크로, ASGI (Asynchronous Server Gateway Interface)를 기반으로 하여 비동기 프로그래밍을 지원합니다. 이로써 빠른 속도와 높은 동시성 처리를 가능하게 합니다.
+
+## FastAPI 사용법
+
+```python
+from fastapi import FastAPI
+
+# fast api 서버
+app = FastAPI()
+
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+```
+위의 FastAPI() 함수를 통해 서버를 실행할 수 있습니다.
+
+또한, async를 활용해 해당하는 http method에 따라 비동기 처리가 가능합니다.
