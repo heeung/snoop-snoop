@@ -349,3 +349,95 @@ $ sudo ./confluent-hub install confluentinc/kafka-connect-elasticsearch:latest -
 
 ### 간트 차트
 ![img_4.png](img_4.png)
+
+
+# TIL-23.09.11
+### EC2 환경에서 kafka 클러스터 구축 및 kafka connect 설정
+> 도커 컴포즈를 통해 3개의 브로커로 클러스터 실행
+ ```dockerfile
+version: '3.8'
+services:
+zookeeper-1:
+image: confluentinc/cp-zookeeper:5.5.1
+ports:
+- '32181:32181'
+environment:
+ZOOKEEPER_CLIENT_PORT: 32181
+ZOOKEEPER_TICK_TIME: 2000
+
+
+kafka-1:
+image: confluentinc/cp-kafka:5.5.1
+ports:
+- '9092:9092'
+depends_on:
+- zookeeper-1
+environment:
+KAFKA_BROKER_ID: 1
+KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:32181
+KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:29092,EXTERNAL://localhost:9092
+KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+KAFKA_NUM_PARTITIONS: 3
+
+
+kafka-2:
+image: confluentinc/cp-kafka:5.5.1
+ports:
+- '9093:9093'
+depends_on:
+- zookeeper-1
+environment:
+KAFKA_BROKER_ID: 2
+KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:32181
+KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:29093,EXTERNAL://localhost:9093
+KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+KAFKA_NUM_PARTITIONS: 3
+
+
+kafka-3:
+image: confluentinc/cp-kafka:5.5.1
+ports:
+- '9094:9094'
+depends_on:
+- zookeeper-1
+environment:
+KAFKA_BROKER_ID: 3
+KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:32181
+KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:29094,EXTERNAL://localhost:9094
+KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+KAFKA_NUM_PARTITIONS: 3
+
+# connect
+ connect:
+  image: confluentinc/cp-kafka-connect:7.2.0
+    depends_on:
+        - kafka1
+        - kafka2
+        - kafka3
+  volumes:
+    - /home/ec2-user/confluent-hub/plugins/confluentinc-kafka-connect-elasticsearch:/usr/share/java/kafka-connect-elasticsearch
+  environment:
+    CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/java/kafka-connect-elasticsearch"
+    CONNECT_CONFIG_STORAGE_TOPIC: "my_connect_configs"
+    CONNECT_OFFSET_STORAGE_TOPIC: "my_connect_offsets"
+    CONNECT_STATUS_STORAGE_TOPIC: "my_connect_statuses"
+    CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+    CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+    CONNECT_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9093,kafka3:9094
+    CONNECT_REST_PORT: 8083
+    CONNECT_REST_ADVERTISED_HOST_NAME: "15.165.116.126"
+    CONNECT_GROUP_ID: compose-connect-group
+```
+
+kafka connect가 kafka 브로커에 접근하지 못하는 에러 발생..
+
+
+
+
+
