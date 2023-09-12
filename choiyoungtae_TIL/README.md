@@ -437,7 +437,58 @@ KAFKA_NUM_PARTITIONS: 3
 
 kafka connect가 kafka 브로커에 접근하지 못하는 에러 발생..
 
+# TIL-23.09.12
 
+### kafka-Elasticsearch 파이프라인 구축
 
+```dockerfile
+ kafka-connect:
+    image: confluentinc/cp-kafka-connect:5.5.1
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/java/kafka-connect-elasticsearch"
+      CONNECT_CONFIG_STORAGE_TOPIC: "my_connect_configs"
+      CONNECT_OFFSET_STORAGE_TOPIC: "my_connect_offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "my_connect_statuses"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_BOOTSTRAP_SERVERS: kafka-1:29092,kafka-2:29093,kafka-3:29094 #포트번호 주의!
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: "localhost"
+      CONNECT_GROUP_ID: compose-connect-group
+```
+
+```dockerfile
+# REST API로 엘라스틱서치 커넥터 등록
+curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
+    "name": "elasticsearch-sink",
+    "config": {
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "tasks.max": "1",
+        # coupang 토픽을 감시
+        "topics": "coupang",
+        "key.ignore": "true",
+        "schema.ignore": "true",
+        # 엘라스틱서치 URL
+        "connection.url": "http://13.125.74.24:9200",
+        "type.name": "kafka-connect",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "key.converter.schemas.enable": "false"
+    }
+}'
+```
+
+![img_5.png](img_5.png)
+kafka-ui에서 kafka-connect 컨슈머 작동 확인
+
+![img_6.png](img_6.png)
+kibana에서 elasticsearch 모니터링하여 데이터 들어온걸 확인
 
 
