@@ -314,3 +314,41 @@ async def root():
 위의 FastAPI() 함수를 통해 서버를 실행할 수 있습니다.
 
 또한, async를 활용해 해당하는 http method에 따라 비동기 처리가 가능합니다.
+
+# TIL_0912
+
+## Python을 활용한 Kafka 연결
+
+``` python
+import json
+from confluent_kafka import Producer, KafkaError, KafkaException
+
+def send_to_kafka(products_info):
+    # Kafka 프로듀서 설정
+    producer_config = {
+        'bootstrap.servers': 'j9d104a.p.ssafy.io:9092',  # Kafka 브로커의 주소
+    }
+
+    producer = Producer(producer_config)
+
+    # Kafka 토픽 설정
+    kafka_topic = 'coupang'  # 보내려는 Kafka 토픽 이름
+
+    try:
+        # 데이터를 JSON 형식으로 직렬화하여 Kafka 토픽으로 보냄
+        producer.produce(kafka_topic, key=None, value=json.dumps(products_info, ensure_ascii=False).encode('utf-8'))
+
+        # 메시지 전송 확인
+        producer.poll(0)
+        producer.flush()
+
+    except KafkaException as e:
+        if e.args[0].code() == KafkaError._INVALID_ARG:
+            print(f"Invalid argument: {e}")
+        else:
+            print(f"Failed to send message to Kafka: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        producer.flush()
+```
