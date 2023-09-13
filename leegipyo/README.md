@@ -352,3 +352,18 @@ def send_to_kafka(products_info):
     finally:
         producer.flush()
 ```
+# TIL_0913
+
+## Kafka Connect란?
+먼저 Kafka는 Producer와 Consumer를 통해 데이터 파이프라인을 만들 수 있습니다. 예를 들어 A서버의 DB에 저장한 데이터를 Kafka Producer/Consumer를 통해 B서버의 DB로도 보낼 수 있습니다. 이러한 파이프라인이 여러개면 매번 반복적으로 파이프라인을 구성해야줘야합니다. 
+
+KafkConnect는 이러한 반복적인 파이프라인 구성을 쉽고 간편하게 만들 수 있게 만들어진 Apache Kafka 프로젝트중 하나입니다.
+
+## Kafka Connect 관련 용어 정리
+- Connect: Connector를 동작하게 하는 프로세서(서버)
+- Connector:  Data Source(DB)의 데이터를 처리하는 소스가 들어있는 jar파일
+- Source Connector: data source에 담긴 데이터를 topic에 담는 역할(Producer)을 하는 connector
+- Sink Connector: topic에 담긴 데이터를 특정 data source로 보내는 역할(Consumer 역할)을 하는 connector
+- 단일 모드(Standalone): 하나의 Connect만 사용하는 모드
+- 분산 모드(Distributed): 여러개의 Connect를 한개의 클러스트로 묶어서 사용하는 모드.
+  -> 특정 Connect가 장애가 발생해도 나머지 Connect가 대신 처리하도록 함
