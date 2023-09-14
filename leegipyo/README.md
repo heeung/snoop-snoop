@@ -367,3 +367,9 @@ KafkConnect는 이러한 반복적인 파이프라인 구성을 쉽고 간편하
 - 단일 모드(Standalone): 하나의 Connect만 사용하는 모드
 - 분산 모드(Distributed): 여러개의 Connect를 한개의 클러스트로 묶어서 사용하는 모드.
   -> 특정 Connect가 장애가 발생해도 나머지 Connect가 대신 처리하도록 함
+
+# TIL_0914
+
+- 수집한 데이터를 Kafka로 전송
+- 데이터는 상품과 가격 두 가지 필드로 나누어 전송
+- 4가지 상위 카테고리로 Kafka topic과 Elasticsearch index를 나누어 데이터 저장 
