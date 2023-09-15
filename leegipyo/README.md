@@ -373,3 +373,6 @@ KafkConnect는 이러한 반복적인 파이프라인 구성을 쉽고 간편하
 - 수집한 데이터를 Kafka로 전송
 - 데이터는 상품과 가격 두 가지 필드로 나누어 전송
 - 4가지 상위 카테고리로 Kafka topic과 Elasticsearch index를 나누어 데이터 저장 
+
+# TIL_0915
+- 중간발표 진행
