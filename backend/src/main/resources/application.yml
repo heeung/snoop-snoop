@@ -10,6 +10,8 @@ server:
 
 
 spring:
+  profiles:
+    active: es
   redis:
     host: localhost
     port: 6379
