@@ -67,7 +67,7 @@ public class MemberController {
 
 
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "204", description = "회원가입 성공",
+		@ApiResponse(responseCode = "204", description = "회원 조회",
 			content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = UserResponse.class))),
 		@ApiResponse(responseCode = "400", description = "요청 오류 "),
@@ -77,7 +77,7 @@ public class MemberController {
 	@Operation(summary = "멤버 정보", description = "멤버 정보 불러오기", tags = { "Member Controller" })
 	@GetMapping("/info")
 	public Response<?> getUser (@MemberInfo MembersInfo membersInfo) {
-		return new Response<>(HttpStatus.NO_CONTENT, "내 정보 불러오기",memberService.getUserInfo(membersInfo.getId()));
+		return new Response<>(HttpStatus.OK, "내 정보 불러오기",memberService.getUserInfo(membersInfo.getId()));
 	}
 
 
