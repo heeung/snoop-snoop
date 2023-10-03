@@ -24,14 +24,13 @@ import com.appa.snoop.presentation.R
 import com.appa.snoop.presentation.navigation.Router
 import com.appa.snoop.presentation.ui.category.component.CategoryItem
 import com.appa.snoop.presentation.ui.home.common.HomeTitle
+import com.appa.snoop.presentation.ui.home.component.AdsItem
 import com.appa.snoop.presentation.ui.home.component.HomeItem
 import com.appa.snoop.presentation.ui.home.component.HomeItemListTitleView
 import com.appa.snoop.presentation.ui.home.component.MultipleImageView
-import com.appa.snoop.presentation.ui.home.dumy.imageLinks
-import com.appa.snoop.presentation.ui.home.dumy.imageLinksToCoupang
-import com.appa.snoop.presentation.ui.home.dumy.itemList
 import com.appa.snoop.presentation.ui.login.component.GoSignupText
 import com.appa.snoop.presentation.util.effects.MainLaunchedEffect
+import com.appa.snoop.presentation.util.extensions.verticalScrollWithScrollbar
 import ir.kaaveh.sdpcompose.sdp
 
 @Composable
@@ -44,11 +43,13 @@ fun HomeScreen(
     val necessariesList by homeViewModel.necessariesList.collectAsState()
     val furnitureList by homeViewModel.furnitureList.collectAsState()
     val foodList by homeViewModel.foodList.collectAsState()
+    val recommendList by homeViewModel.recommendList.collectAsState()
 
     MainLaunchedEffect(
         navController
     )
     LaunchedEffect(Unit) {
+        homeViewModel.getRecommendProductList()
         homeViewModel.getPopularDigitalList()
         homeViewModel.getPopularNecessariesList()
         homeViewModel.getPopularFurnitureList()
@@ -59,13 +60,15 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollableState)
+//            .verticalScrollWithScrollbar(scrollableState)
 //            .background(WhiteColor),
     ) {
-        MultipleImageView(
-            Modifier.padding(8.sdp, 8.sdp),
-            imageLinks = imageLinks,
-            imageLinksToCoupang = imageLinksToCoupang
-        )
+        if (recommendList.isNotEmpty()) {
+            AdsItem(
+                Modifier.padding(8.sdp, 8.sdp),
+                recommendList
+            )
+        }
         HomeItemListTitleView(
             titleName = HomeTitle.DIGITAL.titleName,
             titleImg = HomeTitle.DIGITAL.res

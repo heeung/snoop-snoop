@@ -57,7 +57,8 @@ fun MainNavHost(
         ) {
             CategoryScreen(
                 navController = navController,
-                showSnackBar = showSnackBar
+                showSnackBar = showSnackBar,
+                mainViewModel = mainViewModel
             )
         }
         mainSlideTransitions(
@@ -149,8 +150,8 @@ fun MainNavHost(
             }
             ChattingScreen(
                 navController = navController,
-                roomNumber = 4,
-                chattingViewModel = hiltViewModel(parentEntry)
+                chattingViewModel = hiltViewModel(parentEntry),
+                mainViewModel = mainViewModel
             )
         }
     }

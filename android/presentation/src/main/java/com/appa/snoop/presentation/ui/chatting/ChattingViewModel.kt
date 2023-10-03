@@ -8,15 +8,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.appa.snoop.domain.model.category.Product
 import com.appa.snoop.domain.model.chat.ChatItem
+import com.appa.snoop.domain.usecase.chatting.GetPreChattingListUseCase
+import com.appa.snoop.domain.usecase.register.EmailInputUseCase
+import com.appa.snoop.domain.usecase.register.GetEmailUseCase
 import com.appa.snoop.domain.usecase.register.GetLoginStatusUseCase
+import com.appa.snoop.presentation.ui.category.CategoryViewModel
+import com.appa.snoop.presentation.ui.category.utils.ProductKeywordPagingDataSource
+import com.appa.snoop.presentation.ui.chatting.utils.ChatPagingDataSource
+import com.appa.snoop.presentation.util.PriceUtil
 import com.google.gson.GsonBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import okhttp3.internal.notifyAll
 import org.json.JSONObject
 import ua.naiksoftware.stomp.Stomp
@@ -28,10 +43,14 @@ private const val TAG = "[김희웅] ChattingViewModel"
 @SuppressLint("MutableCollectionMutableState")
 @HiltViewModel
 class ChattingViewModel @Inject constructor(
-    private val getLoginStatusUseCase: GetLoginStatusUseCase
+    private val getLoginStatusUseCase: GetLoginStatusUseCase,
+    private val getEmailUseCase: GetEmailUseCase,
+    private val getPreChattingListUseCase: GetPreChattingListUseCase
 ) : ViewModel() {
-//    private val _chatListState = MutableStateFlow(chatList)
-//    val chatListState = _chatListState.asStateFlow()
+
+    companion object {
+        const val PAGE_SIZE = 50
+    }
 
     var chatList = mutableStateOf(mutableListOf<ChatItem>())
         private set
@@ -40,6 +59,12 @@ class ChattingViewModel @Inject constructor(
         private set
     fun recieveChat() {
         chatRecieveState++
+    }
+
+    var email by mutableStateOf("")
+        private set
+    suspend fun getEmailInfo() {
+        email = getEmailUseCase.invoke()
     }
 
     /*
@@ -83,22 +108,6 @@ class ChattingViewModel @Inject constructor(
              * 그리고 새로운 내용까지 포함한 데이터를 postValue로 변경&추가 되었음을 알림
              * -> LiveData가 인식하고 동작
              */
-//            val chatContent = _chatListState.value
-//            var currentTime = currentTimeFormat()
-
-//            val cur = ChatItem(
-//                roomidx = roomidx,
-//                email = email,
-//                sender = sender,
-//                msg = msg,
-//                imageUrl = imageUrl,
-//                time = time
-//            )
-//
-//            val chatContent = chatList.value
-//            chatContent.add(0, cur)
-//
-//            chatList.value = chatContent
             chatList.value.add(0,
                 ChatItem(
                     roomidx = roomidx,
@@ -110,8 +119,6 @@ class ChattingViewModel @Inject constructor(
                 ),
             )
             recieveChat()
-//            chatList.notify()
-//            _chatListState.emit(chatContent!!)
         }
 
         stompClient.connect()
@@ -142,7 +149,7 @@ class ChattingViewModel @Inject constructor(
         val data = JSONObject()
         data.put("roomidx", roomNumber.value)
         //TODO 바꿔야됨
-        data.put("email", "skdi550@nate.com")
+        data.put("email", email)
         data.put("message", msg)
 
         // 메시지를 보낼 엔드포인트 URL
@@ -249,5 +256,28 @@ class ChattingViewModel @Inject constructor(
             compositeDisposable!!.dispose()
         }
         compositeDisposable = CompositeDisposable()
+    }
+
+    // 채팅 내역 페이징
+    val _pagingDataFlow = MutableStateFlow<PagingData<ChatItem>>(PagingData.empty())
+    val pagingDataFlow = _pagingDataFlow.asStateFlow()
+
+    fun getChattingListPaging(
+        roomId: Int
+    ): Flow<PagingData<ChatItem>> {
+        return Pager(config = PagingConfig(pageSize = PAGE_SIZE)) {
+            ChatPagingDataSource(
+                getPreChattingListUseCase,
+                roomId
+            )
+        }.flow.cachedIn(viewModelScope)
+    }
+
+    fun getChatList(roomId: Int) {
+        viewModelScope.launch {
+            getChattingListPaging(roomId).collectLatest { pagingData ->
+                _pagingDataFlow.emit(pagingData)
+            }
+        }
     }
 }

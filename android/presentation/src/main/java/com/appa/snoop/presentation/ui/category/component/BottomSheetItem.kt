@@ -6,6 +6,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,23 +23,27 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.res.painterResource
+import androidx.navigation.NavController
 import com.appa.snoop.presentation.R
+import com.appa.snoop.presentation.navigation.Router
+import com.appa.snoop.presentation.ui.category.CategoryList
 import com.appa.snoop.presentation.ui.category.CategoryViewModel
+import com.appa.snoop.presentation.ui.main.MainViewModel
 import com.appa.snoop.presentation.ui.theme.BackgroundColor2
-import com.appa.snoop.presentation.ui.theme.DarkGrayColor
-import com.appa.snoop.presentation.ui.theme.PrimaryColor
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
 import kotlinx.coroutines.launch
 
+const val START_ROOM_NUMBER = 6
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
 @Composable
 fun BottomSheetItem(
     majorName: String = "대분류",
     minorList: List<String>,
     categoryViewModel: CategoryViewModel,
+    mainViewModel: MainViewModel,
+    navController: NavController,
     categoryState: Boolean,
     onDismiss: () -> Unit,
     onClick: () -> Unit,
@@ -50,13 +55,14 @@ fun BottomSheetItem(
             .fillMaxWidth()
             .height(30.sdp)
             .clickable { onClick() },
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.sdp)
     ) {
         Icon(
-            painter = if (categoryState) painterResource(id = R.drawable.ic_arrow_down) else painterResource(id = R.drawable.ic_arrow_right),
+            painter = if (categoryState) painterResource(id = R.drawable.ic_arrow_down) else painterResource(id = R.drawable.ic_arrow_forward),
             contentDescription = null,
             modifier = Modifier
-                .size(16.sdp),
+                .size(8.sdp),
         )
         Text(
             text = majorName,
@@ -84,20 +90,56 @@ fun BottomSheetItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                categoryViewModel.getProductListByCategoryPaging(
-                                    majorName,
-                                    minorName
-                                )
-//                                categoryViewModel.getProductListByCategory(majorName, minorName, 1)
-                                if (categoryViewModel.priceRangeState && categoryViewModel.minPriceTextState > categoryViewModel.maxPriceTextState) {
-                                    scope.launch {
-                                        showSnackbar("유효하지 않은 가격 범위입니다. 다시 설정해주세요!")
+                                scope.launch() {
+                                    when (categoryViewModel.isLogined().accessToken) {
+                                        "no_token_error" -> { // 미 로그인 시
+//                                            scope.launch {
+                                                onDismiss()
+                                                showSnackbar(
+                                                    "로그인이 필요한 기능입니다.",
+                                                )
+//                                            }
+                                        }
+                                        else -> { // 로그인 시
+                                            mainViewModel.chatRoomIdSetting(
+                                                roomNumber =
+                                                when (majorName) {
+                                                    "디지털가전" -> {
+                                                        CategoryList.list[0].minorList.indexOf(
+                                                            minorName
+                                                        ) + START_ROOM_NUMBER
+                                                    }
+
+                                                    "가구" -> {
+                                                        CategoryList.list[1].minorList.indexOf(
+                                                            minorName
+                                                        ) + START_ROOM_NUMBER + CategoryList.list[0].minorList.size
+                                                    }
+
+                                                    "생활용품" -> {
+                                                        CategoryList.list[2].minorList.indexOf(
+                                                            minorName
+                                                        ) + START_ROOM_NUMBER + CategoryList.list[0].minorList.size + CategoryList.list[1].minorList.size
+                                                    }
+
+                                                    "식품" -> {
+                                                        CategoryList.list[3].minorList.indexOf(
+                                                            minorName
+                                                        ) + START_ROOM_NUMBER + CategoryList.list[0].minorList.size + CategoryList.list[1].minorList.size + CategoryList.list[2].minorList.size
+                                                    }
+
+                                                    else -> {
+                                                        -1
+                                                    }
+                                                }
+                                            )
+                                            mainViewModel.chatRoomNameSetting(minorName)
+                                            onDismiss()
+                                            navController.navigate(Router.CATEGORY_CHATTING_ROUTER_NAME)
+                                        }
                                     }
                                 }
-                                scope.launch {
-                                    onDismiss()
-                                }
-                            },
+                            }
                     ) {
                         Text(
                             modifier = Modifier,

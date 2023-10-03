@@ -8,6 +8,7 @@ import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.appa.snoop.data.interceptor.RequestInterceptor
 import com.appa.snoop.data.interceptor.ResponseInterceptor
+import com.appa.snoop.data.service.ChatService
 import com.appa.snoop.data.service.HomeService
 import com.appa.snoop.data.service.NotificationService
 import com.appa.snoop.data.service.ProductService
@@ -62,6 +63,7 @@ object NetworkModule {
             GsonConverterFactory.create(
                 GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                    .setLenient()
                     .create()
             )
         )
@@ -109,6 +111,12 @@ object NetworkModule {
     fun provideWishBoxService(
         retrofit: Retrofit
     ): WishBoxService = retrofit.create(WishBoxService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideChatService(
+        retrofit: Retrofit
+    ): ChatService = retrofit.create(ChatService::class.java)
 
     @Provides
     @Singleton
