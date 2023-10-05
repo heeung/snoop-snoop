@@ -10,14 +10,14 @@ server:
 
 
 spring:
-  data:
-    mongodb:
-      host: 52.78.159.20
-      port: 27017
-      authentication-database: admin
-      username: username
-      password: password
-      database: snooping
+#  data:
+#    mongodb:
+#      host: 52.78.159.20
+#      port: 27017
+#      authentication-database: admin
+#      username: username
+#      password: password
+#      database: snooping
 
   profiles:
     active: es,swagger,redis,mongo, rabitmq, s3
@@ -64,3 +64,6 @@ firebase:
   project-id: appaanjanda-11507
   key-path: serviceAccountKey.json
 
+jasypt:
+  encryptor:
+    password: ${PASSWORD}
